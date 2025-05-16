@@ -117,3 +117,29 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# Virtual environments
+**/venv/
+# Or be more specific if you prefer:
+# backend/venv/
+# ai/venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+# Other common ignores
+# (your Flutter .gitignore should already have many of these)
+# example:
+# build/
+# .dart_tool/
+# *.iml
+# *.ipr
+# *.iws
+# .DS_Store
