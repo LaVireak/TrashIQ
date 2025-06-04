@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../home/profile_screen.dart';
 import '../waste_detection/camera_screen.dart';
+import '../home/plastic_category.dart';
+import '../home/glass_category.dart';
+import '../home/can_category.dart';
+import '../home/paper_category.dart'; // Add this import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -97,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
           });
 
           if (index == 1) {
-            // Scan tab
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const ScanScreen()),
@@ -132,19 +135,48 @@ class _HomeScreenState extends State<HomeScreen> {
     IconData icon,
     Color color,
   ) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: color, size: 32),
+    return InkWell(
+      onTap: () {
+        if (title == 'Plastic') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PlasticCategoryScreen()),
+          );
+        } else if (title == 'Glass') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => GlassCategoryScreen()),
+          );
+        } else if (title == 'Can') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CanCategoryScreen()),
+          );
+        } else if (title == 'Paper') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PaperCategoryScreen()),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 32),
+            ),
+            const SizedBox(height: 8),
+            Text(title),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(title),
-      ],
+      ),
     );
   }
 }
