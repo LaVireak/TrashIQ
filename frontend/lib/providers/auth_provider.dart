@@ -1,57 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final AuthService _authService = AuthService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  User? _user;
 
-  User? get currentUser => _authService.currentUser;
-  bool get isAuthenticated => currentUser != null;
-  Stream<User?> get authStateChanges => _authService.authStateChanges;
+  User? get user => _user;
+  bool get isLoggedIn => _user != null;
 
-  Map<String, dynamic>? _userData;
-  Map<String, dynamic>? get userData => _userData;
-
-  // Initialize user data
-  Future<void> initUserData() async {
-    if (isAuthenticated) {
-      _userData = await _authService.getUserData();
+  AuthProvider() {
+    _auth.authStateChanges().listen((User? user) {
+      _user = user;
       notifyListeners();
-    }
+    });
   }
 
-  // Sign in
-  Future<void> signIn(String email, String password) async {
-    await _authService.signInWithEmailAndPassword(email, password);
-    await initUserData();
-  }
-
-  // Register
   Future<void> register(
     String email,
     String password,
     String name,
     String userType,
   ) async {
-    await _authService.registerWithEmailAndPassword(
-      email,
-      password,
-      name,
-      userType,
-    );
-    await initUserData();
+    try {
+      UserCredential result = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      await result.user?.updateDisplayName(name);
+      _user = result.user;
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Registration failed: ${e.toString()}');
+    }
   }
 
-  // Sign out
-  Future<void> signOut() async {
-    await _authService.signOut();
-    _userData = null;
+  Future<void> login(String email, String password) async {
+    try {
+      UserCredential result = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      _user = result.user;
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Login failed: ${e.toString()}');
+    }
+  }
+
+  Future<void> logout() async {
+    await _auth.signOut();
+    _user = null;
     notifyListeners();
-  }
-
-  // Update user data
-  Future<void> updateUserData(Map<String, dynamic> data) async {
-    await _authService.updateUserData(data);
-    await initUserData();
   }
 }

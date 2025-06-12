@@ -6,6 +6,8 @@ import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
@@ -61,7 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
+      appBar: AppBar(title: const Text('Sign Up')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -71,6 +73,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const Spacer(),
+
+                  // Logo
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF4CAF50),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.recycling, color: Colors.white, size: 40),
+                        Text(
+                          'TRASH\nIQ',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Create Account Text
+                  const Text(
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  const Text(
+                    'We are here to help you!',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Name Field
                   CustomTextField(
                     controller: _nameController,
                     labelText: 'Full Name',
@@ -81,7 +132,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                   ),
+
                   const SizedBox(height: 16),
+
+                  // Email Field
                   CustomTextField(
                     controller: _emailController,
                     labelText: 'Email',
@@ -93,7 +147,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                   ),
+
                   const SizedBox(height: 16),
+
+                  // Password Field
                   CustomTextField(
                     controller: _passwordController,
                     labelText: 'Password',
@@ -108,7 +165,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                   ),
+
                   const SizedBox(height: 16),
+
                   const Text('I want to:'),
                   RadioListTile<String>(
                     title: const Text('Sell recyclable items'),
@@ -153,6 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: () => Navigator.pop(context),
                     child: const Text("Already have an account? Login"),
                   ),
+                  const Spacer(),
                 ],
               ),
             ),
