@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../constants/routes.dart';
-import '../../providers/auth_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 
@@ -14,6 +13,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -40,15 +40,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      await Provider.of<AuthProvider>(context, listen: false).register(
+      await _authService.registerWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
         _nameController.text.trim(),
         _userType,
       );
 
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      // AuthWrapper will handle navigation
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
@@ -73,8 +72,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Spacer(),
-
+                  const SizedBox(height: 40), // Replace Spacer with SizedBox
                   // Logo
                   Container(
                     width: 120,
@@ -212,7 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: () => Navigator.pop(context),
                     child: const Text("Already have an account? Login"),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 40), // Replace Spacer with SizedBox
                 ],
               ),
             ),

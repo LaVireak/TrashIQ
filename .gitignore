@@ -143,3 +143,5 @@ __pycache__/
 # *.ipr
 # *.iws
 # .DS_Store
+# Add this line to your .gitignore file
+*.pt

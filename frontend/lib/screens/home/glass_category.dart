@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class GlassCategoryScreen extends StatelessWidget {
+  const GlassCategoryScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -9,10 +11,10 @@ class GlassCategoryScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           'Glass',
           style: TextStyle(
             color: Colors.black,

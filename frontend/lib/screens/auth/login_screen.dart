@@ -239,15 +239,49 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = true);
 
       try {
-        await _authService.signInWithEmail(
+        print(
+          '🔄 Attempting to log in with email: ${_emailController.text.trim()}',
+        );
+
+        final userCredential = await _authService.signInWithEmail(
           _emailController.text.trim(),
           _passwordController.text,
         );
 
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
+        if (userCredential != null && userCredential.user != null) {
+          print('✅ Successfully logged in as: ${userCredential.user!.email}');
+          print('📧 User ID: ${userCredential.user!.uid}');
+          print(
+            '👤 Display Name: ${userCredential.user!.displayName ?? 'No display name'}',
+          );
+
+          // Get user data from Firestore
+          try {
+            final userData = await _authService.getUserData();
+            if (userData != null) {
+              print('📋 User data from Firestore:');
+              print('   - Name: ${userData['name']}');
+              print('   - User Type: ${userData['userType']}');
+              print('   - Email: ${userData['email']}');
+            } else {
+              print('⚠️ No user data found in Firestore');
+            }
+          } catch (e) {
+            print('❌ Error getting user data: $e');
+          }
+
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Welcome back, ${userCredential.user!.email}!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         }
       } catch (e) {
+        print('❌ Login failed: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
@@ -266,10 +300,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _authService.signInWithGoogle();
-
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
