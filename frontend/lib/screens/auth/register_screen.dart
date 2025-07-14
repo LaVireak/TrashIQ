@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../constants/routes.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
+import '../../providers/auth_provider.dart' as custom_auth;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,7 +15,6 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _authService = AuthService();
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -40,7 +41,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      await _authService.registerWithEmailAndPassword(
+      final authProvider = Provider.of<custom_auth.AuthProvider>(context, listen: false);
+      await authProvider.register(
         _emailController.text.trim(),
         _passwordController.text,
         _nameController.text.trim(),
@@ -72,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40), // Replace Spacer with SizedBox
+                  const SizedBox(height: 40),
                   // Logo
                   Container(
                     width: 120,
@@ -198,19 +200,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 24),
                   CustomButton(
                     onPressed: _isLoading ? null : _register,
-                    child:
-                        _isLoading
-                            ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                            : const Text('Register'),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text('Register'),
                   ),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: const Text("Already have an account? Login"),
                   ),
-                  const SizedBox(height: 40), // Replace Spacer with SizedBox
+                  const SizedBox(height: 40),
                 ],
               ),
             ),

@@ -28,13 +28,13 @@ class CanCategoryScreen extends StatelessWidget {
         children: [
           // Search bar
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: TextField(
+              child: const TextField(
                 decoration: InputDecoration(
                   hintText: 'Search',
                   prefixIcon: Icon(Icons.search, color: Colors.grey),
@@ -56,32 +56,32 @@ class CanCategoryScreen extends StatelessWidget {
           // Can items list
           Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
                   _buildCanItem(
                     'Tin Can',
                     '25-50 THB per kilogram',
                     Icons.inventory_2,
-                    Colors.grey[600]!,
+                    Colors.grey,
                   ),
                   _buildCanItem(
                     'Zinc Can',
                     '25-50 THB per kilogram',
                     Icons.archive,
-                    Colors.grey[700]!,
+                    Colors.grey,
                   ),
                   _buildCanItem(
                     'Soda Can',
                     '25-50 THB per kilogram',
                     Icons.local_drink,
-                    Colors.blue[600]!,
+                    Colors.blue,
                   ),
                   _buildCanItem(
                     'Can',
                     '25-50 THB per kilogram',
                     Icons.widgets,
-                    Colors.orange[600]!,
+                    Colors.orange,
                   ),
                 ],
               ),
@@ -94,7 +94,7 @@ class CanCategoryScreen extends StatelessWidget {
         selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
         currentIndex: 0,
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Scan'),
           BottomNavigationBarItem(
@@ -114,8 +114,8 @@ class CanCategoryScreen extends StatelessWidget {
     Color iconColor,
   ) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.green[50],
         borderRadius: BorderRadius.circular(12),
@@ -132,16 +132,16 @@ class CanCategoryScreen extends StatelessWidget {
             ),
             child: Icon(icon, color: iconColor, size: 30),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   price,
                   style: TextStyle(

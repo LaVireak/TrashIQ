@@ -8,6 +8,7 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   Map<String, dynamic>? _userData;
   bool _isLoading = false;
+  String? _error; // Add this missing field
 
   User? get user => _user;
   Map<String, dynamic>? get userData => _userData;
@@ -15,6 +16,10 @@ class AuthProvider extends ChangeNotifier {
   String get userEmail => _user?.email ?? '';
   bool get isLoggedIn => _user != null;
   bool get isLoading => _isLoading;
+  String? get error => _error; // Add getter for error
+
+  DateTime? _lastFetchTime;
+  static const Duration _cacheDuration = Duration(minutes: 5);
 
   AuthProvider() {
     _auth.authStateChanges().listen(_onAuthStateChanged);
@@ -36,6 +41,13 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _fetchUserData() async {
     if (_user == null) return;
 
+    // Check if we have recent cached data
+    if (_lastFetchTime != null &&
+        DateTime.now().difference(_lastFetchTime!) < _cacheDuration &&
+        _userData != null) {
+      return; // Use cached data
+    }
+
     try {
       print('📋 Fetching user data for: ${_user!.uid}');
       final doc = await _firestore.collection('users').doc(_user!.uid).get();
@@ -43,6 +55,7 @@ class AuthProvider extends ChangeNotifier {
         final newData = doc.data();
         if (_userData != newData) {
           _userData = newData;
+          _lastFetchTime = DateTime.now();
           print('✅ User data updated: $_userData');
           print('📋 User data from Firestore:');
           print('   - Name: ${_userData?['name']}');
@@ -61,6 +74,12 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Clear error method
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
   Future<void> register(
     String email,
     String password,
@@ -68,6 +87,7 @@ class AuthProvider extends ChangeNotifier {
     String userType,
   ) async {
     _setLoading(true);
+    _error = null; // Clear previous errors
     try {
       print('🔄 Attempting to register with email: $email');
       UserCredential result = await _auth.createUserWithEmailAndPassword(
@@ -78,17 +98,27 @@ class AuthProvider extends ChangeNotifier {
       await result.user?.updateDisplayName(name);
 
       if (result.user != null) {
-        await _createUserDocument(result.user!, name, userType);
-      }
+        // Store user data in Firestore with consistent field names
+        await _firestore.collection('users').doc(result.user!.uid).set({
+          'name': name, // Make sure this matches what ProfileScreen expects
+          'email': email,
+          'userType': userType,
+          'createdAt': FieldValue.serverTimestamp(),
+          'uid': result.user!.uid,
+        });
 
-      _user = result.user;
-      await _fetchUserData();
-      print('✅ Registration successful for: ${result.user!.email}');
+        print('✅ User registered and data stored successfully');
+
+        // Fetch the user data immediately after registration
+        await _fetchUserData();
+      }
     } catch (e) {
-      print('❌ Registration failed: $e');
-      throw Exception('Registration failed: ${e.toString()}');
+      print('❌ Registration error: $e');
+      _error = e.toString(); // Now this will work
+      rethrow;
     } finally {
       _setLoading(false);
+      notifyListeners();
     }
   }
 
@@ -110,6 +140,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> login(String email, String password) async {
     _setLoading(true);
+    _error = null; // Clear previous errors
     try {
       print('🔄 Attempting to log in with email: $email');
       UserCredential result = await _auth.signInWithEmailAndPassword(
@@ -135,6 +166,7 @@ class AuthProvider extends ChangeNotifier {
       print('👤 Display Name: ${result.user!.displayName}');
     } catch (e) {
       print('❌ Login failed: $e');
+      _error = e.toString(); // Add error handling here too
       throw Exception('Login failed: ${e.toString()}');
     } finally {
       _setLoading(false);
@@ -143,6 +175,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     _setLoading(true);
+    _error = null; // Clear errors on logout
     try {
       await _auth.signOut();
       _user = null;
@@ -150,6 +183,7 @@ class AuthProvider extends ChangeNotifier {
       print('✅ Successfully logged out');
     } catch (e) {
       print('❌ Logout failed: $e');
+      _error = e.toString(); // Add error handling
       throw Exception('Logout failed: ${e.toString()}');
     } finally {
       _setLoading(false);
@@ -171,6 +205,7 @@ class AuthProvider extends ChangeNotifier {
       final doc = await _firestore.collection('users').doc(_user!.uid).get();
       return doc.data();
     } catch (e) {
+      _error = e.toString(); // Add error handling
       throw Exception('Failed to get user data: ${e.toString()}');
     }
   }

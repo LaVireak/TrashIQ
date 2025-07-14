@@ -28,13 +28,13 @@ class GlassCategoryScreen extends StatelessWidget {
         children: [
           // Search bar
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: TextField(
+              child: const TextField(
                 decoration: InputDecoration(
                   hintText: 'Search',
                   prefixIcon: Icon(Icons.search, color: Colors.grey),
@@ -56,38 +56,38 @@ class GlassCategoryScreen extends StatelessWidget {
           // Glass items list
           Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
                   _buildGlassItem(
                     'Beer bottle',
                     '25-50 THB per kilogram',
                     Icons.wine_bar,
-                    Colors.green[700]!,
+                    Colors.green,
                   ),
                   _buildGlassItem(
                     'Clear bottle',
                     '25-50 THB per kilogram',
                     Icons.local_drink,
-                    Colors.blue[100]!,
+                    Colors.blue,
                   ),
                   _buildGlassItem(
                     'Jar bottle',
                     '25-50 THB per kilogram',
                     Icons.inventory,
-                    Colors.grey[600]!,
+                    Colors.grey,
                   ),
                   _buildGlassItem(
                     'Clear drinking glass',
                     '25-50 THB per kilogram',
                     Icons.local_cafe,
-                    Colors.blue[200]!,
+                    Colors.blue,
                   ),
                   _buildGlassItem(
                     'Crystal drinking glass',
                     '25-50 THB per kilogram',
                     Icons.wine_bar,
-                    Colors.grey[800]!,
+                    Colors.grey,
                   ),
                 ],
               ),
@@ -100,7 +100,7 @@ class GlassCategoryScreen extends StatelessWidget {
         selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
         currentIndex: 0,
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Scan'),
           BottomNavigationBarItem(
@@ -120,8 +120,8 @@ class GlassCategoryScreen extends StatelessWidget {
     Color iconColor,
   ) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.green[50],
         borderRadius: BorderRadius.circular(12),
@@ -138,16 +138,16 @@ class GlassCategoryScreen extends StatelessWidget {
             ),
             child: Icon(icon, color: iconColor, size: 30),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   price,
                   style: TextStyle(

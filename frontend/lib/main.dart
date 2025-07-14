@@ -14,9 +14,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Optimize performance
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  // Add performance monitoring
+  WidgetsBinding.instance.addObserver(_PerformanceObserver());
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
@@ -33,20 +34,15 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'TrashIQ',
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.lightTheme, // Use static getter
+        darkTheme: AppTheme.darkTheme, // Optional: add dark theme
+        themeMode: ThemeMode.system,
+        debugShowCheckedModeBanner: false,
         home: const AuthWrapper(),
         routes: {
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
           '/home': (context) => const HomeScreen(),
-        },
-        // Performance optimizations
-        debugShowCheckedModeBanner: false,
-        builder: (context, child) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-            child: child!,
-          );
         },
       ),
     );
@@ -58,25 +54,28 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<custom_auth.AuthProvider>(
-      builder: (context, authProvider, child) {
-        // Show loading while checking auth state
-        if (authProvider.isLoading) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // If user is logged in, go to home
-        if (authProvider.isLoggedIn) {
+        if (snapshot.hasData) {
           return const HomeScreen();
         }
 
-        // If no user, show login
         return const LoginScreen();
       },
     );
+  }
+}
+
+class _PerformanceObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print('App lifecycle state: $state');
   }
 }

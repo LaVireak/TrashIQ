@@ -13,8 +13,12 @@ class ProfileScreen extends StatelessWidget {
     return Consumer<custom_auth.AuthProvider>(
       builder: (context, authProvider, child) {
         final userData = authProvider.userData;
-        final username = (userData?['username'] ?? '').toString().trim();
-        final userEmail = authProvider.userEmail;
+        // Fix: Use 'name' instead of 'username' and add fallbacks
+        final username =
+            (userData?['name'] ?? authProvider.user?.displayName ?? 'User')
+                .toString()
+                .trim();
+        final userEmail = authProvider.userEmail ?? 'No email';
 
         return Scaffold(
           appBar: AppBar(
@@ -67,7 +71,10 @@ class ProfileScreen extends StatelessWidget {
                 // User Info
                 Text(
                   username.isNotEmpty ? username : 'Username',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -89,7 +96,11 @@ class ProfileScreen extends StatelessWidget {
                   title: 'Edit Profile',
                   onTap: () {},
                 ),
-                _buildMenuItem(icon: Icons.history, title: 'History', onTap: () {}),
+                _buildMenuItem(
+                  icon: Icons.history,
+                  title: 'History',
+                  onTap: () {},
+                ),
                 _buildMenuItem(
                   icon: Icons.notifications_outlined,
                   title: 'Notifications',
@@ -115,49 +126,41 @@ class ProfileScreen extends StatelessWidget {
                   title: 'Log Out',
                   onTap: () async {
                     // Show confirmation dialog
-                    final bool? shouldLogout = await showDialog<bool>(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Log Out'),
-                          content: const Text('Are you sure you want to log out?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('Log Out'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-
-                    if (shouldLogout == true) {
-                      try {
-                        await authProvider.logout();
-                        if (context.mounted) {
-                          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error logging out: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
-                    }
+                    _showLogoutDialog(context, _authService);
                   },
                   showDivider: false,
                 ),
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, AuthService authService) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Log Out'),
+          content: const Text('Are you sure you want to log out?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await authService.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pushReplacementNamed('/login');
+                }
+              },
+              child: const Text('Log Out'),
+            ),
+          ],
         );
       },
     );

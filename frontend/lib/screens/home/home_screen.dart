@@ -24,10 +24,10 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, authProvider, child) {
         final userName = authProvider.userName;
         final userData = authProvider.userData;
-        
+
         print('🏠 HomeScreen - Username: $userName');
         print('🏠 HomeScreen - UserData: $userData');
-        
+
         return Scaffold(
           appBar: AppBar(
             title: Text('Hey, $userName!'),
@@ -54,12 +54,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // Welcome Card - Updated
                   _WelcomeCard(userName: userName, userData: userData),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Selling History Card - Optimized
                   const _SellingHistoryCard(),
-                  
+
                   const SizedBox(height: 16),
 
                   // Categories Section
@@ -68,18 +68,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Optimized GridView
                   _CategoriesGrid(),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   const Text(
                     'Type of selling trash',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Placeholder for statistics
                   Container(
                     height: 200,
@@ -91,10 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         'Chart visualization\n(Coming Soon)',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                     ),
                   ),
@@ -150,58 +147,61 @@ class _WelcomeCard extends StatelessWidget {
   final String userName;
   final Map<String, dynamic>? userData;
 
-  const _WelcomeCard({
-    required this.userName,
-    required this.userData,
-  });
+  const _WelcomeCard({required this.userName, required this.userData});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hey, $userName! 👋',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+    return RepaintBoundary(
+      child: Card(
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hey, $userName! 👋',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Welcome back to TrashIQ',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-            if (userData != null) ...[
               const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _getUserTypeColor(userData!['userType']).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _getUserTypeColor(userData!['userType']).withOpacity(0.3),
-                  ),
-                ),
-                child: Text(
-                  '${_getUserTypeText(userData!['userType'])} Account',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _getUserTypeColor(userData!['userType']),
-                  ),
-                ),
+              Text(
+                'Welcome back to TrashIQ',
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
+              if (userData != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getUserTypeColor(
+                      userData!['userType'],
+                    ).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _getUserTypeColor(
+                        userData!['userType'],
+                      ).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    '${_getUserTypeText(userData!['userType'])} Account',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _getUserTypeColor(userData!['userType']),
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -245,17 +245,17 @@ class _SellingHistoryCard extends StatelessWidget {
           children: [
             const Text(
               'Selling History',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('You Sold', style: TextStyle(fontSize: 16)),
-                Text('₹1234', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                Text(
+                  '₹1234',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -263,7 +263,10 @@ class _SellingHistoryCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('This Month', style: TextStyle(fontSize: 16)),
-                Text('₹567', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                Text(
+                  '₹567',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -305,24 +308,30 @@ class _CategoriesGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.1,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.2,
       ),
       itemCount: _categories.length,
+      // Add this for better performance
+      addRepaintBoundaries: true,
+      addAutomaticKeepAlives: true,
       itemBuilder: (context, index) {
         final category = _categories[index];
-        return _CategoryCard(
-          category: category,
-          onTap: () => _navigateToCategory(context, category.title),
+        return RepaintBoundary(
+          // Wrap each item
+          child: _CategoryCard(
+            category: category,
+            onTap: () => _navigateToCategory(context, category),
+          ),
         );
       },
     );
   }
 
-  void _navigateToCategory(BuildContext context, String categoryTitle) {
+  void _navigateToCategory(BuildContext context, _CategoryData category) {
     Widget screen;
-    switch (categoryTitle) {
+    switch (category.title) {
       case 'Plastic':
         screen = PlasticCategoryScreen();
         break;
@@ -338,11 +347,8 @@ class _CategoriesGrid extends StatelessWidget {
       default:
         return;
     }
-    
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => screen),
-    );
+
+    Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
   }
 }
 
@@ -360,10 +366,7 @@ class _CategoryCard extends StatelessWidget {
   final _CategoryData category;
   final VoidCallback onTap;
 
-  const _CategoryCard({
-    required this.category,
-    required this.onTap,
-  });
+  const _CategoryCard({required this.category, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -394,11 +397,7 @@ class _CategoryCard extends StatelessWidget {
                   color: category.color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  category.icon,
-                  color: category.color,
-                  size: 32,
-                ),
+                child: Icon(category.icon, color: category.color, size: 32),
               ),
               const SizedBox(height: 8),
               Text(
@@ -436,22 +435,13 @@ class _OptimizedBottomNavBar extends StatelessWidget {
       unselectedItemColor: Colors.grey,
       elevation: 8,
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(
           icon: Icon(Icons.qr_code_scanner),
           label: 'Scan',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart),
-          label: 'Cart',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
   }

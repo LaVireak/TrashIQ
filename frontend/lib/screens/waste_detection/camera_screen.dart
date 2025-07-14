@@ -26,11 +26,16 @@ class _ScanScreenState extends State<ScanScreen> {
       if (cameras != null && cameras!.isNotEmpty) {
         _controller = CameraController(
           cameras![0],
-          ResolutionPreset.high,
+          ResolutionPreset.medium, // Change from high to medium
           enableAudio: false,
+          imageFormatGroup:
+              ImageFormatGroup.yuv420, // Add this for better performance
         );
         await _controller!.initialize();
-        setState(() {});
+        if (mounted) {
+          // Add this check
+          setState(() {});
+        }
       }
     } catch (e) {
       print('Error initializing camera: $e');

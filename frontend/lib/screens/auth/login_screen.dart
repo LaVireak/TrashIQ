@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
+import '../../providers/auth_provider.dart' as custom_auth;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -152,19 +154,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child:
-                        _isLoading
-                            ? const CircularProgressIndicator(
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text(
+                            'Sign In',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                               color: Colors.white,
-                            )
-                            : const Text(
-                              'Sign In',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
                             ),
+                          ),
                   ),
                 ),
 
@@ -239,49 +240,21 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = true);
 
       try {
-        print(
-          '🔄 Attempting to log in with email: ${_emailController.text.trim()}',
-        );
-
-        final userCredential = await _authService.signInWithEmail(
+        final authProvider = Provider.of<custom_auth.AuthProvider>(context, listen: false);
+        await authProvider.login(
           _emailController.text.trim(),
           _passwordController.text,
         );
 
-        if (userCredential != null && userCredential.user != null) {
-          print('✅ Successfully logged in as: ${userCredential.user!.email}');
-          print('📧 User ID: ${userCredential.user!.uid}');
-          print(
-            '👤 Display Name: ${userCredential.user!.displayName ?? 'No display name'}',
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login successful!'),
+              backgroundColor: Colors.green,
+            ),
           );
-
-          // Get user data from Firestore
-          try {
-            final userData = await _authService.getUserData();
-            if (userData != null) {
-              print('📋 User data from Firestore:');
-              print('   - Name: ${userData['name']}');
-              print('   - User Type: ${userData['userType']}');
-              print('   - Email: ${userData['email']}');
-            } else {
-              print('⚠️ No user data found in Firestore');
-            }
-          } catch (e) {
-            print('❌ Error getting user data: $e');
-          }
-
-          // Show success message
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Welcome back, ${userCredential.user!.email}!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
         }
       } catch (e) {
-        print('❌ Login failed: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
