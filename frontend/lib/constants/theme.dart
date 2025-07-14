@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Make lightTheme static
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF4CAF50), // Green theme
+        seedColor: const Color(0xFF4CAF50),
         brightness: Brightness.light,
       ),
       appBarTheme: const AppBarTheme(
@@ -46,7 +45,6 @@ class AppTheme {
     );
   }
 
-  // Also add dark theme if needed
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,

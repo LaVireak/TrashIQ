@@ -124,10 +124,7 @@ class ProfileScreen extends StatelessWidget {
                 _buildMenuItem(
                   icon: Icons.logout,
                   title: 'Log Out',
-                  onTap: () async {
-                    // Show confirmation dialog
-                    _showLogoutDialog(context, _authService);
-                  },
+                  onTap: () => _showLogoutDialog(context),
                   showDivider: false,
                 ),
               ],
@@ -138,7 +135,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context, AuthService authService) {
+  void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -152,10 +149,47 @@ class ProfileScreen extends StatelessWidget {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop();
-                await authService.signOut();
-                if (context.mounted) {
-                  Navigator.of(context).pushReplacementNamed('/login');
+                Navigator.of(context).pop(); // Close dialog first
+
+                try {
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder:
+                        (context) =>
+                            const Center(child: CircularProgressIndicator()),
+                  );
+
+                  // Use AuthProvider for logout
+                  final authProvider = Provider.of<custom_auth.AuthProvider>(
+                    context,
+                    listen: false,
+                  );
+                  await authProvider.logout();
+
+                  // Close loading dialog
+                  if (Navigator.canPop(context)) {
+                    Navigator.of(context).pop();
+                  }
+
+                  // Navigate to login screen and clear navigation stack
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/login', (route) => false);
+                } catch (e) {
+                  // Close loading dialog if it's still open
+                  if (Navigator.canPop(context)) {
+                    Navigator.of(context).pop();
+                  }
+
+                  // Show error message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Logout failed: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               },
               child: const Text('Log Out'),

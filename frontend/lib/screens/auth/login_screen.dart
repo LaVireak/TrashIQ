@@ -154,18 +154,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                        : const Text(
-                            'Sign In',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                    child:
+                        _isLoading
+                            ? const CircularProgressIndicator(
                               color: Colors.white,
+                            )
+                            : const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
                   ),
                 ),
 
@@ -240,20 +241,20 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = true);
 
       try {
-        final authProvider = Provider.of<custom_auth.AuthProvider>(context, listen: false);
+        final authProvider = Provider.of<custom_auth.AuthProvider>(
+          context,
+          listen: false,
+        );
+
         await authProvider.login(
           _emailController.text.trim(),
           _passwordController.text,
         );
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login successful!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+        // Wait a bit for the auth state to propagate
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        print('🎉 Login completed, AuthWrapper should handle navigation');
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
