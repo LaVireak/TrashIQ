@@ -4,9 +4,54 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 class DetectionService {
-  // Use the IP address from your server output
-  static const String baseUrl =
-      'http://10.120.122.128:5000'; // or 'http://127.0.0.1:5000'
+  // Try different URLs based on your setup:
+  
+  // For Android Emulator:
+  static const String baseUrl = 'http://10.0.2.2:5000';
+  
+  // For Physical Device (replace with your computer's IP):
+  // static const String baseUrl = 'http://192.168.1.XXX:5000';
+  
+  // For iOS Simulator:
+  // static const String baseUrl = 'http://localhost:5000';
+  
+  // For debugging - add more timeout and logging
+  static Future<bool> checkHealth() async {
+    try {
+      print('🏥 Checking health at: $baseUrl/health');
+      
+      // Test different URLs if the main one fails
+      final testUrls = [
+        '$baseUrl/health',
+        'http://localhost:5000/health',
+        'http://127.0.0.1:5000/health',
+      ];
+      
+      for (String url in testUrls) {
+        try {
+          print('🔄 Trying URL: $url');
+          final response = await http.get(
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+          ).timeout(const Duration(seconds: 10));
+
+          print('🏥 Health check response for $url: ${response.statusCode}');
+          if (response.statusCode == 200) {
+            print('✅ Successfully connected to: $url');
+            return true;
+          }
+        } catch (e) {
+          print('❌ Failed to connect to $url: $e');
+          continue;
+        }
+      }
+      
+      return false;
+    } catch (e) {
+      print('❌ Health check failed: $e');
+      return false;
+    }
+  }
 
   static Future<Map<String, dynamic>> detectTrash(String imagePath) async {
     try {
@@ -18,8 +63,9 @@ class DetectionService {
       final String base64Image = base64Encode(imageBytes);
 
       print('📷 Image encoded, sending to backend...');
+      print('🌐 Backend URL: $baseUrl/detect');
 
-      // Make API request
+      // Make API request with longer timeout
       final response = await http
           .post(
             Uri.parse('$baseUrl/detect'),
@@ -28,59 +74,23 @@ class DetectionService {
           )
           .timeout(const Duration(seconds: 30));
 
-      print('📡 Backend response status: ${response.statusCode}');
+      print('📡 Response status: ${response.statusCode}');
+      print('📡 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-        print('✅ Detection result: ${result['success']}');
-        if (result['success']) {
-          print(
-            '🎯 Detected: ${result['detection']?['name']} (${result['detection']?['confidence']}%)',
-          );
-        }
+        final Map<String, dynamic> result = jsonDecode(response.body);
+        print('✅ Detection successful: $result');
         return result;
       } else {
-        throw Exception('Detection failed: ${response.statusCode}');
+        print('❌ Detection failed with status: ${response.statusCode}');
+        return {
+          'success': false,
+          'error': 'Server returned status ${response.statusCode}'
+        };
       }
     } catch (e) {
       print('❌ Detection error: $e');
-      throw Exception('Error detecting trash: $e');
-    }
-  }
-
-  static Future<Map<String, dynamic>> getAvailableClasses() async {
-    try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/classes'))
-          .timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to get classes: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error getting classes: $e');
-    }
-  }
-
-  static Future<bool> checkHealth() async {
-    try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/health'))
-          .timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('🏥 Backend health: ${data['status']}');
-        print('🤖 Model loaded: ${data['model_loaded']}');
-        print('📊 Total classes: ${data['total_classes']}');
-        return data['status'] == 'healthy' && data['model_loaded'] == true;
-      }
-      return false;
-    } catch (e) {
-      print('❌ Health check failed: $e');
-      return false;
+      return {'success': false, 'error': e.toString()};
     }
   }
 }

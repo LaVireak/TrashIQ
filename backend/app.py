@@ -264,19 +264,13 @@ def get_classes():
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    try:
-        model_classes = list(model.names.values()) if model else []
-        return jsonify({
-            'status': 'healthy' if model_loaded else 'model_not_loaded',
-            'model_loaded': model_loaded,
-            'model_classes': model_classes,
-            'total_classes': len(model_classes)
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'error': str(e)
-        }), 500
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'TrashIQ Detection Server is running',
+        'model_loaded': model is not None,
+        'classes': list(TRASH_CATEGORIES.keys()) if model else []
+    }), 200
 
 if __name__ == '__main__':
     print("🚀 Starting TrashIQ Detection Server...")

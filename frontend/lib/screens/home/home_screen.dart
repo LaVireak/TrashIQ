@@ -40,18 +40,44 @@ class _HomeScreenState extends State<HomeScreen> {
         print('🏠 UserData: $userData');
         print('🏠 User email: ${authProvider.userEmail}');
         print('🏠 Is logged in: ${authProvider.isLoggedIn}');
+        print('🏠 Points: ${authProvider.userPoints}');
         print('🏠 === END HOMESCREEN BUILD ===\n');
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Hey, $userName!'),
+            title: Row(
+              children: [
+                Text('Hey, $userName!'),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${authProvider.userPoints} pts',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
             backgroundColor: Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
             elevation: 0,
             actions: [
               IconButton(
                 icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Notifications feature coming soon!'),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -66,19 +92,19 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Welcome Card - Updated
+                  // Welcome Card - Updated with points
                   _WelcomeCard(userName: userName, userData: userData),
 
                   const SizedBox(height: 16),
 
-                  // Selling History Card - Optimized
+                  // Impact Card - Updated
                   const _SellingHistoryCard(),
 
                   const SizedBox(height: 16),
 
                   // Categories Section
                   const Text(
-                    'Waste Category',
+                    'Waste Categories',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -88,26 +114,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 24),
 
+                  // Quick Stats
                   const Text(
-                    'Type of selling trash',
+                    'Quick Stats',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
-                  // Placeholder for statistics
-                  Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Chart visualization\n(Coming Soon)',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                  // Stats Cards
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Total Points',
+                          value: '${authProvider.userPoints}',
+                          icon: Icons.eco,
+                          color: Colors.green,
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          title: 'Items Scanned',
+                          value: '${(authProvider.userPoints / 10).floor()}',
+                          icon: Icons.camera_alt,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -156,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Updated Welcome Card with proper greeting
+// Updated Welcome Card with points integration
 class _WelcomeCard extends StatelessWidget {
   final String userName;
   final Map<String, dynamic>? userData;
@@ -201,7 +235,7 @@ class _WelcomeCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Points display
+                  // Points display with leaderboard navigation
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -226,18 +260,18 @@ class _WelcomeCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.eco, color: Colors.green, size: 18),
-                          SizedBox(width: 4),
+                          const Icon(Icons.eco, color: Colors.green, size: 18),
+                          const SizedBox(width: 4),
                           Text(
                             '$points pts',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
                           ),
-                          SizedBox(width: 4),
-                          Icon(
+                          const SizedBox(width: 4),
+                          const Icon(
                             Icons.leaderboard,
                             color: Colors.green,
                             size: 16,
@@ -248,61 +282,87 @@ class _WelcomeCard extends StatelessWidget {
                   ),
                 ],
               ),
+
+              // User type badge
               if (userData != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: _getUserTypeColor(
-                      userData!['userType'],
-                    ).withOpacity(0.1),
+                    color: Colors.blue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _getUserTypeColor(
-                        userData!['userType'],
-                      ).withOpacity(0.3),
-                    ),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
                   ),
                   child: Text(
-                    '${_getUserTypeText(userData!['userType'])} Account',
-                    style: TextStyle(
+                    '${userData!['userType']?.toString().toUpperCase()} ACCOUNT',
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _getUserTypeColor(userData!['userType']),
                     ),
                   ),
                 ),
               ],
+
+              const SizedBox(height: 16),
+
+              // Quick action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ScanScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.camera_alt, size: 20),
+                      label: const Text('Scan Trash'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('History feature coming soon!'),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.history, size: 20),
+                      label: const Text('History'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.green,
+                        side: const BorderSide(color: Colors.green),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  Color _getUserTypeColor(String? userType) {
-    switch (userType?.toLowerCase()) {
-      case 'seller':
-        return Colors.green;
-      case 'buyer':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getUserTypeText(String? userType) {
-    switch (userType?.toLowerCase()) {
-      case 'seller':
-        return 'Seller';
-      case 'buyer':
-        return 'Buyer';
-      default:
-        return 'User';
-    }
   }
 }
 
@@ -312,58 +372,97 @@ class _SellingHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Selling History',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('You Sold', style: TextStyle(fontSize: 16)),
-                Text(
-                  '₹1234',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('This Month', style: TextStyle(fontSize: 16)),
-                Text(
-                  '₹567',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+    return Consumer<custom_auth.AuthProvider>(
+      builder: (context, authProvider, child) {
+        final points = authProvider.userPoints;
+        final userData = authProvider.userData;
+
+        return RepaintBoundary(
+          child: Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Your Impact',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Icon(Icons.eco, color: Colors.green, size: 24),
+                    ],
                   ),
-                ),
-                child: const Text('Collect Your Earnings'),
+                  const SizedBox(height: 16),
+
+                  // Points earned
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Points Earned'),
+                      Text(
+                        '$points',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Items detected (mock data for now)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Items Detected'),
+                      Text(
+                        '${(points / 10).floor()}', // Rough estimate
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Action button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.withOpacity(0.1),
+                        foregroundColor: Colors.green,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('View Full Profile'),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -519,6 +618,51 @@ class _OptimizedBottomNavBar extends StatelessWidget {
         BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
+    );
+  }
+}
+
+// Add this new widget for stats cards
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

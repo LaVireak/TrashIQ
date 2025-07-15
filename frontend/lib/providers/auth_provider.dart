@@ -10,6 +10,7 @@ class AuthProvider with ChangeNotifier {
   Map<String, dynamic>? _userData;
   bool _isLoading = false;
   String? _error;
+  DateTime? _lastFetchTime; // This field was missing!
 
   // Add a flag to prevent multiple notifications
   bool _isNotifying = false;
@@ -17,128 +18,78 @@ class AuthProvider with ChangeNotifier {
   User? get user => _user;
   Map<String, dynamic>? get userData => _userData;
   String get userName => _userData?['name'] ?? _user?.displayName ?? 'User';
-  String get userEmail => _user?.email ?? '';
+  String get userEmail => _user?.email ?? 'No email';
   bool get isLoggedIn => _user != null;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Add points getter
+  // Add this missing getter
   int get userPoints => _userData?['points'] ?? 0;
 
-  DateTime? _lastFetchTime;
-  static const Duration _cacheDuration = Duration(minutes: 5);
-
+  // Constructor to set up auth state listener
   AuthProvider() {
-    print('🏗️ AuthProvider constructor called');
-    _auth.authStateChanges().listen(_onAuthStateChanged);
+    _initializeAuthListener();
   }
 
-  Future<void> _onAuthStateChanged(User? user) async {
-    print('🔄 === AUTH STATE CHANGE EVENT ===');
-    print('🔄 New user: ${user?.email ?? 'null'}');
-    print('🔄 Current _user: ${_user?.email ?? 'null'}');
-    print('🔄 User UID: ${user?.uid ?? 'null'}');
-    print('🔄 Current _user UID: ${_user?.uid ?? 'null'}');
-
-    // Prevent duplicate processing - Fixed condition
-    if (_user?.uid == user?.uid && _user != null && user != null) {
-      print('🔄 Same user, skipping duplicate processing');
-      return;
-    }
-
-    _user = user;
-
-    if (user != null) {
-      print('🔄 User authenticated, fetching data...');
-      await _fetchUserData();
-      print('✅ Auth state processing complete - User logged in');
-    } else {
-      print('🔄 User logged out, clearing data...');
-      _userData = null;
-      _lastFetchTime = null;
-      print('✅ Auth state processing complete - User logged out');
-    }
-
-    print('🔄 Current state after processing:');
-    print('   - _user: ${_user?.email ?? 'null'}');
-    print('   - isLoggedIn: $isLoggedIn');
-    print('   - userName: $userName');
-    print('🔄 Notifying listeners...');
-    _safeNotifyListeners();
-    print('🔄 === END AUTH STATE CHANGE EVENT ===\n');
-  }
-
-  void _safeNotifyListeners() {
-    print('📢 _safeNotifyListeners called');
-    if (!_isNotifying) {
-      _isNotifying = true;
-      print('📢 Scheduling notifyListeners');
-      // Use a microtask to ensure the notification happens after the current frame
-      Future.microtask(() {
-        print('📢 Executing notifyListeners');
-        _isNotifying = false;
-        notifyListeners();
-        print('📢 notifyListeners completed');
-      });
-    } else {
-      print('📢 Already notifying, skipping');
-    }
-  }
-
-  void _setLoading(bool loading) {
-    print('⏳ Setting loading: $loading');
-    if (_isLoading != loading) {
-      _isLoading = loading;
-      _safeNotifyListeners();
-    }
-  }
-
-  // Fetch user data from Firestore with caching
-  Future<void> _fetchUserData() async {
-    if (_user == null) {
-      print('❌ Cannot fetch user data: _user is null');
-      return;
-    }
-
-    // Check if we have recent cached data
-    if (_lastFetchTime != null &&
-        DateTime.now().difference(_lastFetchTime!) < _cacheDuration &&
-        _userData != null) {
-      print('📋 Using cached user data');
-      return; // Use cached data
-    }
-
-    try {
-      print('📋 Fetching user data for: ${_user!.uid}');
-      final doc = await _firestore.collection('users').doc(_user!.uid).get();
-      if (doc.exists) {
-        final newData = doc.data();
-        print('📋 Firestore document exists: ${doc.data()}');
-        if (_userData != newData) {
-          _userData = newData;
-          _lastFetchTime = DateTime.now();
-          print('✅ User data updated: $_userData');
-          print('📋 User data from Firestore:');
-          print('   - Name: ${_userData?['name']}');
-          print('   - User Type: ${_userData?['userType']}');
-          print('   - Email: ${_userData?['email']}');
+  // Initialize auth state listener
+  void _initializeAuthListener() {
+    _auth.authStateChanges().listen((User? user) {
+      print('🔄 Auth state changed: ${user?.email ?? 'No user'}');
+      if (user != null && user != _user) {
+        print('🔄 Current _user: ${_user?.email ?? 'No current user'}');
+        if (_user?.uid != user.uid) {
+          print('🔄 User authenticated, fetching data...');
+          _user = user;
+          _fetchUserData();
+        } else {
+          print('🔄 Same user, skipping duplicate processing');
         }
-      } else {
-        print('❌ Firestore document does not exist for user: ${_user!.uid}');
+      } else if (user == null && _user != null) {
+        print('🔄 User signed out, clearing data...');
+        _user = null;
+        _userData = null;
+        _lastFetchTime = null;
+        _safeNotifyListeners();
       }
+    });
+  }
+
+  // Add method to update points
+  Future<void> addPoints(int points, String itemName) async {
+    if (_user == null) return;
+    
+    try {
+      print('🎯 Adding $points points for $itemName');
+      
+      // Update points in Firestore
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'points': FieldValue.increment(points),
+        'lastDetection': {
+          'itemName': itemName,
+          'points': points,
+          'timestamp': FieldValue.serverTimestamp(),
+        }
+      });
+      
+      // Update local data
+      if (_userData != null) {
+        _userData!['points'] = userPoints + points;
+      }
+      
+      print('✅ Points updated successfully');
+      _safeNotifyListeners();
     } catch (e) {
-      print('❌ Error fetching user data: $e');
+      print('❌ Error updating points: $e');
     }
   }
 
-  // Public method to refresh user data
+  // Add method to refresh user data
   Future<void> refreshUserData() async {
-    print('🔄 Manual refresh user data requested');
-    await _fetchUserData();
-    _safeNotifyListeners();
+    if (_user != null) {
+      await _fetchUserData();
+    }
   }
 
-  // Clear error method
   void clearError() {
     print('🧹 Clearing error');
     _error = null;
@@ -209,10 +160,10 @@ class AuthProvider with ChangeNotifier {
     print('📝 User Type: $userType');
 
     _setLoading(true);
-    _error = null; // Clear previous errors
+    _error = null;
+    
     try {
-      print('🔄 Attempting to register with email: $email');
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
+      final result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -221,20 +172,21 @@ class AuthProvider with ChangeNotifier {
 
       if (result.user != null) {
         print('✅ User created successfully: ${result.user!.uid}');
-        // Store user data in Firestore with consistent field names
+        
+        // Store user data in Firestore with points initialized
         await _firestore.collection('users').doc(result.user!.uid).set({
           'name': name,
           'email': email,
           'userType': userType,
-          'points': 0, // Initialize with 0 points
+          'points': 0, // Initialize points to 0
           'createdAt': FieldValue.serverTimestamp(),
           'uid': result.user!.uid,
         });
 
-        print('✅ User registered and data stored successfully');
-
-        // Fetch the user data immediately after registration
+        _user = result.user;
         await _fetchUserData();
+        
+        print('✅ Registration completed successfully');
         print('📝 === REGISTRATION COMPLETE ===\n');
       }
     } catch (e) {
@@ -244,22 +196,6 @@ class AuthProvider with ChangeNotifier {
     } finally {
       _setLoading(false);
     }
-  }
-
-  // Create user document in Firestore
-  Future<void> _createUserDocument(
-    User user,
-    String name,
-    String userType,
-  ) async {
-    await _firestore.collection('users').doc(user.uid).set({
-      'uid': user.uid,
-      'email': user.email,
-      'name': name,
-      'userType': userType,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
   }
 
   Future<void> login(String email, String password) async {
@@ -334,33 +270,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Add method to update points
-  Future<void> addPoints(int points, String itemName) async {
-    if (_user == null) return;
-
-    try {
-      print('🎯 Adding $points points for $itemName');
-
-      // Update points in Firestore
-      await _firestore.collection('users').doc(_user!.uid).update({
-        'points': FieldValue.increment(points),
-        'lastDetection': {
-          'itemName': itemName,
-          'points': points,
-          'timestamp': FieldValue.serverTimestamp(),
-        },
-      });
-
-      // Update local data
-      _userData?['points'] = userPoints + points;
-
-      print('✅ Points updated successfully');
-      _safeNotifyListeners();
-    } catch (e) {
-      print('❌ Error updating points: $e');
-    }
-  }
-
   // Add this method to clear any existing sessions
   Future<void> clearSession() async {
     print('🧹 === CLEARING SESSION ===');
@@ -374,6 +283,84 @@ class AuthProvider with ChangeNotifier {
       print('🧹 === SESSION CLEAR COMPLETE ===\n');
     } catch (e) {
       print('❌ Error clearing session: $e');
+    }
+  }
+
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    _safeNotifyListeners();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_isNotifying) {
+      _isNotifying = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          notifyListeners();
+        }
+        _isNotifying = false;
+      });
+    }
+  }
+
+  bool get mounted {
+    try {
+      // Simple check to see if we can safely call notifyListeners
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Fetch user data from Firestore with caching
+  Future<void> _fetchUserData() async {
+    if (_user == null) return;
+
+    try {
+      print('📋 Fetching user data for: ${_user!.uid}');
+      
+      // Check cache to avoid unnecessary fetches
+      final now = DateTime.now();
+      if (_lastFetchTime != null && 
+          now.difference(_lastFetchTime!).inMinutes < 5 && 
+          _userData != null) {
+        print('📋 Using cached user data');
+        return;
+      }
+      
+      final doc = await _firestore.collection('users').doc(_user!.uid).get();
+      
+      if (doc.exists) {
+        _userData = doc.data();
+        _lastFetchTime = now;
+        
+        // Ensure points field exists - this is the key fix
+        if (_userData != null && !_userData!.containsKey('points')) {
+          print('⚠️ Points field missing, adding it...');
+          _userData!['points'] = 0;
+          // Update Firestore to include points field
+          await _firestore.collection('users').doc(_user!.uid).update({
+            'points': 0,
+          });
+          print('✅ Points field added to Firestore');
+        }
+        
+        print('✅ User data updated: $_userData');
+        print('📋 User data from Firestore:');
+        print('   - Name: ${_userData?['name']}');
+        print('   - User Type: ${_userData?['userType']}');
+        print('   - Email: ${_userData?['email']}');
+        print('   - Points: ${_userData?['points'] ?? 0}');
+        print('🔄 Notifying listeners...');
+      } else {
+        print('❌ User document not found');
+        _userData = null;
+      }
+      
+      _safeNotifyListeners();
+    } catch (e) {
+      print('❌ Error fetching user data: $e');
+      _userData = null;
     }
   }
 }

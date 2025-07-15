@@ -17,7 +17,7 @@ class LeaderboardScreen extends StatelessWidget {
         builder: (context, authProvider, child) {
           final currentUserPoints = authProvider.userPoints;
           final currentUserName = authProvider.userName;
-
+          
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -48,43 +48,31 @@ class LeaderboardScreen extends StatelessWidget {
                       ),
                       Text(
                         '$currentUserPoints Points',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontSize: 16),
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Your Current Rank: #4',
+                        'Your Current Rank: #1',
                         style: TextStyle(color: Colors.white, fontSize: 14),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
-
+                
                 // Top users
                 const Text(
                   'Top EcoWarriors',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-
+                
                 // Mock leaderboard data
-                _buildLeaderboardItem(1, 'Sarah Green', 1250, true),
-                _buildLeaderboardItem(2, 'Mike Johnson', 1180, false),
-                _buildLeaderboardItem(3, 'Emma Wilson', 980, false),
-                _buildLeaderboardItem(
-                  4,
-                  currentUserName,
-                  currentUserPoints,
-                  false,
-                  isCurrentUser: true,
-                ),
-                _buildLeaderboardItem(5, 'Alex Brown', 720, false),
-                _buildLeaderboardItem(6, 'Lisa Davis', 650, false),
-                _buildLeaderboardItem(7, 'Tom Miller', 590, false),
-                _buildLeaderboardItem(8, 'Anna Lee', 540, false),
+                _buildLeaderboardItem(1, currentUserName, currentUserPoints, true, isCurrentUser: true),
+                _buildLeaderboardItem(2, 'Sarah Green', 850, false),
+                _buildLeaderboardItem(3, 'Mike Johnson', 720, false),
+                _buildLeaderboardItem(4, 'Emma Wilson', 650, false),
+                _buildLeaderboardItem(5, 'Alex Brown', 580, false),
               ],
             ),
           );
@@ -93,17 +81,10 @@ class LeaderboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLeaderboardItem(
-    int rank,
-    String name,
-    int points,
-    bool showCrown, {
-    bool isCurrentUser = false,
-  }) {
-    Color backgroundColor =
-        isCurrentUser ? Colors.green.withOpacity(0.1) : Colors.white;
+  Widget _buildLeaderboardItem(int rank, String name, int points, bool showCrown, {bool isCurrentUser = false}) {
+    Color backgroundColor = isCurrentUser ? Colors.green.withOpacity(0.1) : Colors.white;
     Color borderColor = isCurrentUser ? Colors.green : Colors.grey.shade200;
-
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -111,17 +92,14 @@ class LeaderboardScreen extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
-        boxShadow:
-            rank <= 3
-                ? [
-                  BoxShadow(
-                    color: Colors.orange.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-                : null,
+        boxShadow: rank <= 3 ? [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ] : null,
       ),
       child: Row(
         children: [
@@ -134,24 +112,19 @@ class LeaderboardScreen extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child:
-                  showCrown
-                      ? const Icon(
-                        Icons.emoji_events,
+              child: showCrown && rank == 1
+                  ? const Icon(Icons.emoji_events, color: Colors.white, size: 20)
+                  : Text(
+                      '$rank',
+                      style: const TextStyle(
                         color: Colors.white,
-                        size: 20,
-                      )
-                      : Text(
-                        '$rank',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
             ),
           ),
           const SizedBox(width: 16),
-
+          
           // User info
           Expanded(
             child: Column(
@@ -162,20 +135,27 @@ class LeaderboardScreen extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
-                    color:
-                        isCurrentUser ? Colors.green.shade700 : Colors.black87,
+                    color: isCurrentUser ? Colors.green.shade700 : Colors.black87,
                   ),
                 ),
                 Text(
                   '$points points',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
           ),
-
+          
           // Badge for top 3
-          if (rank <= 3) Icon(Icons.star, color: _getRankColor(rank), size: 24),
+          if (rank <= 3)
+            Icon(
+              Icons.star,
+              color: _getRankColor(rank),
+              size: 24,
+            ),
         ],
       ),
     );
