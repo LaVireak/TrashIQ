@@ -22,6 +22,9 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  // Add points getter
+  int get userPoints => _userData?['points'] ?? 0;
+
   DateTime? _lastFetchTime;
   static const Duration _cacheDuration = Duration(minutes: 5);
 
@@ -151,13 +154,23 @@ class AuthProvider with ChangeNotifier {
     try {
       print('🔄 Checking authentication state...');
 
-      // Check current user
-      final currentUser = _auth.currentUser;
+      // Add timeout to prevent infinite loading
+      final currentUser = await Future.any([
+        Future.value(_auth.currentUser),
+        Future.delayed(const Duration(seconds: 10), () => null),
+      ]);
+
       if (currentUser != null) {
         print('✅ Firebase user found: ${currentUser.email}');
         print('✅ User UID: ${currentUser.uid}');
         _user = currentUser;
-        await _fetchUserData();
+
+        // Fetch user data with timeout
+        await Future.any([
+          _fetchUserData(),
+          Future.delayed(const Duration(seconds: 10)),
+        ]);
+
         print('✅ Auth state check complete - User authenticated');
       } else {
         print('❌ No authenticated user found in Firebase');
@@ -194,7 +207,7 @@ class AuthProvider with ChangeNotifier {
     print('📝 Email: $email');
     print('📝 Name: $name');
     print('📝 User Type: $userType');
-    
+
     _setLoading(true);
     _error = null; // Clear previous errors
     try {
@@ -210,9 +223,10 @@ class AuthProvider with ChangeNotifier {
         print('✅ User created successfully: ${result.user!.uid}');
         // Store user data in Firestore with consistent field names
         await _firestore.collection('users').doc(result.user!.uid).set({
-          'name': name, // Make sure this matches what ProfileScreen expects
+          'name': name,
           'email': email,
           'userType': userType,
+          'points': 0, // Initialize with 0 points
           'createdAt': FieldValue.serverTimestamp(),
           'uid': result.user!.uid,
         });
@@ -253,21 +267,21 @@ class AuthProvider with ChangeNotifier {
     print('🔐 Attempting login for: $email');
     _setLoading(true);
     _error = null;
-    
+
     try {
       final result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
+
       print('✅ Firebase login successful');
       print('✅ UID: ${result.user!.uid}');
-      
-      // The _onAuthStateChanged will handle state updates and data fetching
-      print('✅ Login process completed - waiting for auth state change');
-      
-      // Explicit UI notification to ensure immediate update
-      _safeNotifyListeners();
+
+      // Explicitly set the user and fetch data immediately
+      _user = result.user;
+      await _fetchUserData();
+
+      print('✅ Login process completed');
       print('🔐 === LOGIN COMPLETE ===\n');
     } catch (e) {
       print('❌ Login failed: $e');
@@ -275,24 +289,25 @@ class AuthProvider with ChangeNotifier {
       throw Exception('Login failed: ${e.toString()}');
     } finally {
       _setLoading(false);
+      _safeNotifyListeners();
     }
   }
 
   Future<void> logout() async {
     print('🚪 === LOGOUT START ===');
     print('🚪 Current user: ${_user?.email ?? 'null'}');
-    
+
     _setLoading(true);
     _error = null;
     try {
       await _auth.signOut();
       print('✅ Firebase logout successful');
-      
+
       // Clear local state
       _user = null;
       _userData = null;
       _lastFetchTime = null;
-      
+
       print('✅ Local state cleared');
       print('🚪 === LOGOUT COMPLETE ===\n');
     } catch (e) {
@@ -316,6 +331,33 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       throw Exception('Failed to get user data: ${e.toString()}');
+    }
+  }
+
+  // Add method to update points
+  Future<void> addPoints(int points, String itemName) async {
+    if (_user == null) return;
+
+    try {
+      print('🎯 Adding $points points for $itemName');
+
+      // Update points in Firestore
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'points': FieldValue.increment(points),
+        'lastDetection': {
+          'itemName': itemName,
+          'points': points,
+          'timestamp': FieldValue.serverTimestamp(),
+        },
+      });
+
+      // Update local data
+      _userData?['points'] = userPoints + points;
+
+      print('✅ Points updated successfully');
+      _safeNotifyListeners();
+    } catch (e) {
+      print('❌ Error updating points: $e');
     }
   }
 

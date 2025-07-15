@@ -241,21 +241,35 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = true);
 
       try {
+        print('🔐 === LOGIN SCREEN START ===');
         final authProvider = Provider.of<custom_auth.AuthProvider>(
           context,
           listen: false,
         );
+
+        // Clear any previous errors
+        authProvider.clearError();
 
         await authProvider.login(
           _emailController.text.trim(),
           _passwordController.text,
         );
 
-        // Wait a bit for the auth state to propagate
-        await Future.delayed(const Duration(milliseconds: 100));
+        // Wait for auth state to propagate
+        await Future.delayed(const Duration(milliseconds: 500));
 
-        print('🎉 Login completed, AuthWrapper should handle navigation');
+        print('🎉 Login completed in LoginScreen');
+        print('🎉 Auth state should trigger navigation via AuthWrapper');
+        print('🔐 === LOGIN SCREEN COMPLETE ===\n');
+
+        // Force a rebuild of the AuthWrapper
+        if (mounted) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/home', (route) => false);
+        }
       } catch (e) {
+        print('❌ Login error in LoginScreen: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),

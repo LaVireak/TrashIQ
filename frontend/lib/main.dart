@@ -67,8 +67,29 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    print('🏗️ AuthWrapper initState started');
+
+    // Check authentication state on startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<custom_auth.AuthProvider>(
+        context,
+        listen: false,
+      );
+      print('🏗️ AuthWrapper initState - checking auth state');
+      authProvider.checkAuthState();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +98,17 @@ class AuthWrapper extends StatelessWidget {
         final user = authProvider.user;
         final isLoading = authProvider.isLoading;
         final error = authProvider.error;
+        final isLoggedIn = authProvider.isLoggedIn;
+
+        // Add comprehensive debug logging
+        print('🏠 === AUTHWRAPPER BUILD ===');
+        print('🏠 User: ${user?.email ?? 'null'}');
+        print('🏠 IsLoading: $isLoading');
+        print('🏠 IsLoggedIn: $isLoggedIn');
+        print('🏠 Error: ${error ?? 'null'}');
+        print('🏠 UserData: ${authProvider.userData}');
+        print('🏠 Decision: ${isLoggedIn ? 'HomeScreen' : 'LoginScreen'}');
+        print('🏠 === END AUTHWRAPPER BUILD ===\n');
 
         // Show error state if there's a persistent error
         if (error != null && !isLoading) {
@@ -88,18 +120,22 @@ class AuthWrapper extends StatelessWidget {
                   const Icon(Icons.error_outline, size: 64, color: Colors.red),
                   const SizedBox(height: 16),
                   const Text(
-                    'Connection Error',
+                    'Authentication Error',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Unable to connect to authentication service',
-                    textAlign: TextAlign.center,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      error,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      // Try to refresh the auth state
+                      authProvider.clearError();
                       authProvider.checkAuthState();
                     },
                     child: const Text('Retry'),
@@ -107,10 +143,9 @@ class AuthWrapper extends StatelessWidget {
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () {
-                      // Navigate to login anyway for offline mode
-                      Navigator.of(context).pushReplacementNamed('/login');
+                      authProvider.clearError();
                     },
-                    child: const Text('Continue Offline'),
+                    child: const Text('Go to Login'),
                   ),
                 ],
               ),
@@ -118,29 +153,39 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        // Show loading while authentication is in progress
+        // Show loading screen with timeout
         if (isLoading) {
-          return const Scaffold(
+          return Scaffold(
+            backgroundColor: Colors.white,
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Loading...'),
+                  const CircularProgressIndicator(color: Colors.green),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Authenticating...',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
                 ],
               ),
             ),
           );
         }
 
-        // If user is authenticated, show home screen
-        if (user != null) {
+        // Navigate based on authentication state
+        if (isLoggedIn && user != null) {
+          print('🏠 ✅ Navigating to HomeScreen');
           return const HomeScreen();
+        } else {
+          print('🏠 ❌ Navigating to LoginScreen');
+          return const LoginScreen();
         }
-
-        // If no user, show login screen
-        return const LoginScreen();
       },
     );
   }

@@ -7,6 +7,7 @@ import '../home/glass_category.dart';
 import '../home/can_category.dart';
 import '../home/paper_category.dart';
 import '../../providers/auth_provider.dart' as custom_auth;
+import 'leaderboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,14 +20,27 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    print('🏠 === HOMESCREEN INIT ===');
+    print('🏠 HomeScreen initialized successfully');
+    print('🏠 === END HOMESCREEN INIT ===\n');
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<custom_auth.AuthProvider>(
       builder: (context, authProvider, child) {
         final userName = authProvider.userName;
         final userData = authProvider.userData;
 
-        print('🏠 HomeScreen - Username: $userName');
-        print('🏠 HomeScreen - UserData: $userData');
+        print('🏠 === HOMESCREEN BUILD ===');
+        print('🏠 HomeScreen building...');
+        print('🏠 Username: $userName');
+        print('🏠 UserData: $userData');
+        print('🏠 User email: ${authProvider.userEmail}');
+        print('🏠 Is logged in: ${authProvider.isLoggedIn}');
+        print('🏠 === END HOMESCREEN BUILD ===\n');
 
         return Scaffold(
           appBar: AppBar(
@@ -151,6 +165,8 @@ class _WelcomeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final points = userData?['points'] ?? 0;
+
     return RepaintBoundary(
       child: Card(
         elevation: 2,
@@ -159,18 +175,78 @@ class _WelcomeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Hey, $userName! 👋',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Welcome back to TrashIQ',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hey, $userName! 👋',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Welcome back to TrashIQ',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Points display
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LeaderboardScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.green.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.eco, color: Colors.green, size: 18),
+                          SizedBox(width: 4),
+                          Text(
+                            '$points pts',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(
+                            Icons.leaderboard,
+                            color: Colors.green,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
               if (userData != null) ...[
                 const SizedBox(height: 8),
