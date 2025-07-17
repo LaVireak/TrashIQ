@@ -2,6 +2,30 @@
 
 This guide explains how to deploy the TrashIQ Flutter app to Vercel for web testing.
 
+## ⚠️ Deployment Issue Fixed
+
+The `--web-renderer` flag has been deprecated in newer Flutter versions. Use the **Pre-built Deployment** approach:
+
+### ✅ Recommended: Pre-built Deployment
+
+1. **Build locally first:**
+   ```bash
+   cd frontend
+   flutter build web --release
+   ```
+
+2. **Push ALL files to GitHub** (including build folder):
+   ```bash
+   git add .
+   git commit -m "Add pre-built web files"
+   git push origin main
+   ```
+
+3. **Deploy on Vercel:**
+   - Import your GitHub repo
+   - Vercel uses pre-built files (no Flutter installation needed)
+   - Deploys instantly! ✅
+
 ## Quick Deploy to Vercel
 
 ### Option 1: Pre-built Deployment (EASIEST)

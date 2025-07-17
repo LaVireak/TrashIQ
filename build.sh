@@ -12,17 +12,20 @@ fi
 # Add Flutter to PATH
 export PATH="$PWD/flutter/bin:$PATH"
 
+# Set Flutter to not warn about root
+export FLUTTER_ROOT="$PWD/flutter"
+
 echo "Flutter version:"
-flutter --version
+flutter --version --suppress-analytics
 
 echo "Configuring Flutter for web..."
-flutter config --enable-web --no-analytics
+flutter config --enable-web --no-analytics --suppress-analytics
 
 echo "Getting dependencies..."
 cd frontend
-flutter pub get
+flutter pub get --suppress-analytics
 
 echo "Building web app..."
-flutter build web --release --web-renderer html
+flutter build web --release --dart-define=FLUTTER_WEB_USE_SKIA=false
 
 echo "Build complete!"
