@@ -1,7 +1,9 @@
 {
-  "buildCommand": "echo 'Using pre-built Flutter web files'",
-  "outputDirectory": "frontend/build/web",
+  "buildCommand": "chmod +x setup-web.sh && ./setup-web.sh",
+  "outputDirectory": "web",
   "installCommand": "echo 'No install needed'",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/(.*)",

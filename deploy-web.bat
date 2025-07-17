@@ -25,25 +25,19 @@ echo ========================================
 echo Deployment Options:
 echo ========================================
 echo.
-echo Option 1 - Pre-built + GitHub + Vercel (EASIEST):
-echo   1. Build is already done! ✅
-echo   2. Push to GitHub: git add . && git commit -m "Add web deployment" && git push
-echo   3. Import to Vercel from GitHub
-echo   4. Set Output Directory: frontend/build/web
-echo   5. Set Build Command: echo "Using pre-built files"
-echo   6. Deploy! 🚀
+echo Option 1 - Automated GitHub + Vercel (RECOMMENDED):
+echo   1. Web files are ready in /web directory! ✅
+echo   2. Push to GitHub: git add . && git commit -m "Deploy to Vercel" && git push
+echo   3. Import GitHub repo to Vercel
+echo   4. Vercel runs setup-web.sh automatically
+echo   5. Deploys from /web directory! 🚀
 echo.
-echo Option 2 - GitHub + Vercel Auto-build:
-echo   1. Push code: git add . && git commit -m "Add web deployment" && git push
-echo   2. Import to Vercel (will use build.sh script)
-echo   3. Vercel installs Flutter and builds automatically
+echo Option 2 - Manual Vercel Settings:
+echo   - Output Directory: web
+echo   - Build Command: chmod +x setup-web.sh && ./setup-web.sh
+echo   - Install Command: echo "No install needed"
 echo.
-echo Option 3 - Vercel CLI:
-echo   1. Install: npm i -g vercel
-echo   2. Login:   vercel login
-echo   3. Deploy:  vercel
-echo.
-echo Option 4 - Local Test:
+echo Option 3 - Local Test:
 echo   Your local server is running at: http://localhost:8080
 echo.
 echo ========================================

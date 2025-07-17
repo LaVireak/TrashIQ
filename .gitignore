@@ -41,6 +41,8 @@ analysis_benchmark.json
 .pub-preload-cache/
 .pub/
 build/
+# Exception: Include web build for Vercel deployment
+!web/
 flutter_*.png
 linked_*.ds
 unlinked.ds
