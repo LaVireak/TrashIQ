@@ -7,7 +7,7 @@ import '../home/glass_category.dart';
 import '../home/can_category.dart';
 import '../home/paper_category.dart';
 import '../../providers/auth_provider.dart' as custom_auth;
-import 'leaderboard_screen.dart';
+import 'leaderboard_screen.dart'; // Make sure this import exists
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

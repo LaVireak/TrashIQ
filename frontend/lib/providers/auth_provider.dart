@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -14,6 +15,9 @@ class AuthProvider with ChangeNotifier {
 
   // Add a flag to prevent multiple notifications
   bool _isNotifying = false;
+
+  // Web detection for deployment
+  bool get isWebDeployment => kIsWeb;
 
   User? get user => _user;
   Map<String, dynamic>? get userData => _userData;
@@ -57,25 +61,40 @@ class AuthProvider with ChangeNotifier {
   // Add method to update points
   Future<void> addPoints(int points, String itemName) async {
     if (_user == null) return;
-    
+
     try {
       print('🎯 Adding $points points for $itemName');
-      
-      // Update points in Firestore
-      await _firestore.collection('users').doc(_user!.uid).update({
-        'points': FieldValue.increment(points),
-        'lastDetection': {
-          'itemName': itemName,
-          'points': points,
-          'timestamp': FieldValue.serverTimestamp(),
+
+      if (isWebDeployment) {
+        // For web testing, simulate the API call
+        print('🌐 Web mode: Simulating points addition');
+
+        // Update local data only for testing
+        if (_userData != null) {
+          _userData!['points'] = userPoints + points;
+          _userData!['lastDetection'] = {
+            'itemName': itemName,
+            'points': points,
+            'timestamp': DateTime.now().toIso8601String(),
+          };
         }
-      });
-      
-      // Update local data
-      if (_userData != null) {
-        _userData!['points'] = userPoints + points;
+      } else {
+        // Original Firestore update for production
+        await _firestore.collection('users').doc(_user!.uid).update({
+          'points': FieldValue.increment(points),
+          'lastDetection': {
+            'itemName': itemName,
+            'points': points,
+            'timestamp': FieldValue.serverTimestamp(),
+          },
+        });
+
+        // Update local data
+        if (_userData != null) {
+          _userData!['points'] = userPoints + points;
+        }
       }
-      
+
       print('✅ Points updated successfully');
       _safeNotifyListeners();
     } catch (e) {
@@ -161,7 +180,7 @@ class AuthProvider with ChangeNotifier {
 
     _setLoading(true);
     _error = null;
-    
+
     try {
       final result = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -172,7 +191,7 @@ class AuthProvider with ChangeNotifier {
 
       if (result.user != null) {
         print('✅ User created successfully: ${result.user!.uid}');
-        
+
         // Store user data in Firestore with points initialized
         await _firestore.collection('users').doc(result.user!.uid).set({
           'name': name,
@@ -185,7 +204,7 @@ class AuthProvider with ChangeNotifier {
 
         _user = result.user;
         await _fetchUserData();
-        
+
         print('✅ Registration completed successfully');
         print('📝 === REGISTRATION COMPLETE ===\n');
       }
@@ -318,22 +337,22 @@ class AuthProvider with ChangeNotifier {
 
     try {
       print('📋 Fetching user data for: ${_user!.uid}');
-      
+
       // Check cache to avoid unnecessary fetches
       final now = DateTime.now();
-      if (_lastFetchTime != null && 
-          now.difference(_lastFetchTime!).inMinutes < 5 && 
+      if (_lastFetchTime != null &&
+          now.difference(_lastFetchTime!).inMinutes < 5 &&
           _userData != null) {
         print('📋 Using cached user data');
         return;
       }
-      
+
       final doc = await _firestore.collection('users').doc(_user!.uid).get();
-      
+
       if (doc.exists) {
         _userData = doc.data();
         _lastFetchTime = now;
-        
+
         // Ensure points field exists - this is the key fix
         if (_userData != null && !_userData!.containsKey('points')) {
           print('⚠️ Points field missing, adding it...');
@@ -344,7 +363,7 @@ class AuthProvider with ChangeNotifier {
           });
           print('✅ Points field added to Firestore');
         }
-        
+
         print('✅ User data updated: $_userData');
         print('📋 User data from Firestore:');
         print('   - Name: ${_userData?['name']}');
@@ -356,7 +375,7 @@ class AuthProvider with ChangeNotifier {
         print('❌ User document not found');
         _userData = null;
       }
-      
+
       _safeNotifyListeners();
     } catch (e) {
       print('❌ Error fetching user data: $e');

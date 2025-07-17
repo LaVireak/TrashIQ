@@ -1,0 +1,12 @@
+{
+  "name": "trashiq-web",
+  "version": "1.0.0",
+  "description": "TrashIQ - Smart Waste Detection Web App",
+  "scripts": {
+    "build": "cd frontend && flutter build web",
+    "start": "cd frontend && flutter run -d chrome"
+  },
+  "keywords": ["flutter", "web", "waste-detection", "ai"],
+  "author": "TrashIQ Team",
+  "license": "MIT"
+}
