@@ -1,6 +1,7 @@
 {
-  "buildCommand": "cd frontend && flutter build web",
+  "buildCommand": "chmod +x build.sh && ./build.sh",
   "outputDirectory": "frontend/build/web",
+  "installCommand": "echo 'No install needed'",
   "framework": null,
   "rewrites": [
     {
